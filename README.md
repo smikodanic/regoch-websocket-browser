@@ -19,6 +19,7 @@ npm install --save regoch-websocket-browser
 - small file size (*~4kB only*)
 - powerful API
 - possible RxJS integration
+- [browserify](http://browserify.org/)
 
 
 ## Development

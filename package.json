@@ -9,6 +9,7 @@
   "keywords": [
     "websocket",
     "client",
+    "browser",
     "socket",
     "ws",
     "RFC 6455",
