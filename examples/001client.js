@@ -1,4 +1,4 @@
-class TestClient extends window.regoch.Client {
+class TestClient extends window.regoch.Client13jsonRWS {
 
   constructor(wcOpts) {
     super(wcOpts);

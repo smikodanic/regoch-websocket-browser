@@ -16,16 +16,17 @@ const rimrafTask = async () => {
 };
 
 const browserifyTask = async () => {
-  browserify('./src/Client.js')
+  // client for websocket ver. 13 and jsonRWS subprotocol
+  browserify('./src/Client13jsonRWS.js')
     .bundle()
-    .pipe(source('client.js'))
+    .pipe(source('client13jsonRWS.js'))
     .pipe(buffer())
     .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(minify())
     .pipe(sourcemaps.write('./'))
-    .pipe(gulp.dest('./dist/'))
+    .pipe(gulp.dest('./dist/client13jsonRWS'))
     .on('error', (err) => {
-      console.log(err);
+      console.log(err.message);
     });
 };
 
