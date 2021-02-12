@@ -1,4 +1,4 @@
-class TestCB extends window.wsu.ClientBrowser {
+class TestClient extends window.regoch.Client {
 
   constructor(wcOpts) {
     super(wcOpts);
@@ -133,4 +133,4 @@ const wcOpts = {
   debug: true
 };
 
-const testCB = new TestCB(wcOpts);
+const testCB = new TestClient(wcOpts);

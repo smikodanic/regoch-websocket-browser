@@ -8,7 +8,7 @@ const jsonRWS = require('./lib/subprotocol/jsonRWS');
 const helper = require('./lib/helper');
 
 
-class ClientBrowser {
+class Client {
 
   /**
    * @param {{wsURL:string, timeout:number, debug:boolean}} wcOpts - websocket client options
@@ -311,7 +311,7 @@ class ClientBrowser {
 }
 
 
-window.wsu = { ClientBrowser };
+window.regoch = { Client };
 
 },{"./lib/helper":2,"./lib/subprotocol/jsonRWS":3}],2:[function(require,module,exports){
 class Helper {
