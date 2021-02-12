@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>001client</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="../dist/client-min.js"></script>
+    <script src="001client.js"></script>
+    <style>
+      * {
+        font-family: Verdana;
+      }
+      h4 {
+        color:Gray;
+      }
+      input {
+        width: 340px;
+      }
+      [data-text] {
+        color: brown;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebSocket Example</h1>
+    <p>To make this client works properly start the <a href="https://github.com/smikodanic/regoch-websocket-server" target="_blank">Regoch Websocket Server</a>.
+    Open your browser's developer tools to see the activity.</p>
+
+    <h3>Connection Test</h3>
+    <button onclick="testCB.connect()">Connect</button>
+    <button onclick="testCB.disconnect()">Disconnect</button>
+
+
+
+    <h3>Message Test</h3>
+    <p>{id:number, from:number, to:number|number[]|string, cmd:string, payload?:any}</p>
+
+
+    <h4>Questions</h4>
+    <button onclick="testCB.infoSocketId_test()">Get my ID</button> <span style="font-size:smaller" data-text="socketID"></span>
+    <br><button onclick="testCB.infoSocketList_test()">List socket IDs</button> <span style="font-size:smaller" data-text="socketIDs"></span>
+    <br><button onclick="testCB.infoRoomList_test()">List all rooms</button> <span style="font-size:smaller" data-text="roomNames"></span>
+    <br><button onclick="testCB.infoRoomListmy_test()">List my rooms</button> <span style="font-size:smaller" data-text="myRoomNames"></span>
+
+
+    <br><br>
+    <h4>Send message</h4>
+    <input type="number" id="to1" placeholder="to"><input type="text" id="payload1" placeholder="payload (message)"><button onclick="testCB.sendOne_test()">send one</button>
+    <br><input type="string" id="to2" placeholder="to"><input type="text" id="payload2" placeholder="payload (message)"><button onclick="testCB.send_test()">send many</button>
+    <br><input type="text" id="payload3" placeholder="payload (message)"><button onclick="testCB.broadcast_test()">broadcast</button> - send to all but not the sender
+    <br><input type="text" id="payload4" placeholder="payload (message)"><button onclick="testCB.sendAll_test()">send all</button> - send to all clients
+
+
+    <br><br>
+    <h4>Room</h4>
+    room: <input type="text" id="roomName" placeholder="room name">
+      <button onclick="testCB.roomEnter_test()">Enter the room</button>
+      <button onclick="testCB.roomExit_test()">Exit from room</button>
+      <button onclick="testCB.roomExitAll_test()">Exit from all rooms</button>
+    <br>
+    <br>message: <input type="text" id="roomMessage" placeholder="room message"><button onclick="testCB.roomSend_test()">Send to room</button>
+
+
+
+    <br><br>
+    <h4>Server Commands</h4>
+    nickname: <input type="text" id="nickname" placeholder="nick name"><button onclick="testCB.setNick_test()">set nick name</button>
+    <br>route:
+      <input type="text" id="routeUri" placeholder="uri" value="/shop/product/55?limit=25">
+      <input type="text" id="routeBody" placeholder="body" value='{"test": "something"}'>
+      <button onclick="testCB.route_test()">send route</button>
+
+
+    <br><br>
+    <h4>Message format examples:</h4>
+    <textarea style="display:block;width:90%;height:210px;">
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "room/subscribe", "payload": "My Chat Room"}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "room/unsubscribe", "payload": "My Chat Room"}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "room/message", to: "My Chat Room", "payload": "Some message to room"}
+
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "route", "payload": {uri: "shop/login", body: {username:"mark", password:"thG5$#w"}}}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "route", "payload": {uri: "shop/product/55"}}
+
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "info/socket/id"}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "info/socket/list"}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "info/room/list"}
+
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/sendone", to: 21020213324769896, "payload": "Some message to another client"}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/send", to: [21020213324769896], "payload": "Some message to another clients"}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/broadcast", "payload": "Some message to all another clients except the sender"}
+    {"id": 210129163129492000, "from": 210129163129492111, "cmd": "socket/sendall", "payload": "Some message to all another clients"}
+    </textarea>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "name": "regoch-websocket-browser",
+  "version": "1.0.0",
+  "title": "Regoch Websocket Client for Browser",
+  "description": "Websocket Client for browser which works best with the Regoch Websocket Server.",
+  "author": "Sasa Mikodanic <smikodanic@gmail.com>",
+  "homepage": "http://www.regoch.org/websocket-client-browser",
+  "license": "AGPL-3.0",
+  "keywords": [
+    "websocket",
+    "client",
+    "socket",
+    "ws",
+    "RFC 6455",
+    "real-time",
+    "realtime",
+    "tcp",
+    "websocket client",
+    "regoch"
+  ],
+  "main": "dist/clientBrowser-min.js",
+  "scripts": {
+    "inst": "rm -rf node_modules && npm install",
+    "dev": "gulp default"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "gulp": "^4.0.2",
+    "gulp-minify": "^3.1.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "rimraf": "^3.0.2",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "directories": {
+    "example": "examples",
+    "src": "src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smikodanic/regoch-websocket-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smikodanic/regoch-websocket-browser/issues"
+  }
+}
