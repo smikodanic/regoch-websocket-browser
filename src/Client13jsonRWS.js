@@ -13,8 +13,9 @@ class Client13jsonRWS {
    * @param {{wsURL:string, timeout:number, debug:boolean}} wcOpts - websocket client options
    */
   constructor(wcOpts) {
-    this.wcOpts = wcOpts;
-    this.ws;
+    this.wcOpts = wcOpts; // websocket client options
+    this.ws; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
+    this.socketID; // socket ID number, for example: 210214082949459100
   }
 
 
@@ -27,9 +28,6 @@ class Client13jsonRWS {
     const wsURL = this.wcOpts.wsURL; // websocket URL: ws://localhost:3211/something?authkey=TRTmrt
     this.ws = new WebSocket(wsURL, ['jsonRWS']);
     this.onEvents();
-    this.onMessage(msgObj => {
-      if (msgObj.cmd === 'info/socket/id') { this.socketID = +msgObj.payload; } // get the client socketID
-    });
   }
 
 
@@ -47,7 +45,8 @@ class Client13jsonRWS {
    * @returns {void}
    */
   onEvents() {
-    this.ws.onopen = (conn) => {
+    this.ws.onopen = async (conn) => {
+      this.socketID = await this.infoSocketId();
       console.log('WS Connection opened');
     };
 
@@ -66,12 +65,13 @@ class Client13jsonRWS {
   /************* RECEIVER ************/
   /**
    * Receive the message event and push it to msgStream.
+   * @param {Function} - callback function
    * @returns {void}
    */
   onMessage(cb) {
     this.ws.onmessage = (event) => {
       const msg = event.data;
-      this.debug('Received: ', msg);
+      this.debugger('Received: ', msg);
       const msgObj = jsonRWS.incoming(msg); // test against subprotocol rules and convert string to object
       cb(msgObj);
     };
@@ -300,7 +300,7 @@ class Client13jsonRWS {
    * Debugger. Use it as this.debug(var1, var2, var3)
    * @returns {void}
    */
-  debug(...textParts) {
+  debugger(...textParts) {
     const text = textParts.join('');
     if (this.wcOpts.debug) { console.log(text); }
   }
