@@ -10,12 +10,13 @@ const helper = require('./lib/helper');
 class Client13jsonRWS {
 
   /**
-   * @param {{wsURL:string, timeout:number, debug:boolean}} wcOpts - websocket client options
+   * @param {{wsURL:string, timeout:number, recconectAttempts:number, reconnectDelay:number, subprotocol:boolean, debug:boolean}} wcOpts - websocket client options
    */
   constructor(wcOpts) {
     this.wcOpts = wcOpts; // websocket client options
-    this.ws; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
+    this.wsocket; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
     this.socketID; // socket ID number, for example: 210214082949459100
+    this.attempt = 1; // reconnect attempt counter
   }
 
 
@@ -26,7 +27,8 @@ class Client13jsonRWS {
    */
   connect() {
     const wsURL = this.wcOpts.wsURL; // websocket URL: ws://localhost:3211/something?authkey=TRTmrt
-    this.ws = new WebSocket(wsURL, ['jsonRWS']);
+    const subproto = this.wcOpts.subprotocol ? ['jsonRWS'] : [];
+    this.wsocket = new WebSocket(wsURL, subproto);
     this.onEvents();
   }
 
@@ -36,7 +38,35 @@ class Client13jsonRWS {
    * @returns {void}
    */
   disconnect() {
-    this.ws.close();
+    this.wsocket.close();
+  }
+
+
+  /**
+   * Try to reconnect the client when the socket is closed.
+   * This method is fired on every 'close' socket's event.
+   */
+  async reconnect() {
+    const attempts = this.wcOpts.recconectAttempts;
+    const delay = this.wcOpts.recconectDelay;
+    console.log(this.attempt, attempts, delay);
+
+    if (this.attempt <= attempts) {
+      await helper.sleep(delay);
+      this.connect();
+      console.log(`Reconnect attempt #${this.attempt} of ${attempts} in ${delay}ms`);
+      this.attempt++;
+    }
+  }
+
+
+  /**
+   * Reset the properties.
+   */
+  reset() {
+    delete this.clientRequest;
+    if (!!this.socket) { this.socket.unref(); }
+    delete this.socket;
   }
 
 
@@ -45,17 +75,19 @@ class Client13jsonRWS {
    * @returns {void}
    */
   onEvents() {
-    this.ws.onopen = async (conn) => {
+    this.wsocket.onopen = async (conn) => {
       this.socketID = await this.infoSocketId();
       console.log('WS Connection opened');
     };
 
-    this.ws.onclose = () => {
+    this.wsocket.onclose = () => {
       console.log('WS Connection closed');
+      this.reset();
+      this.reconnect();
     };
 
-    this.ws.onerror = (err) => {
-      console.error(err);
+    this.wsocket.onerror = (errorEvent) => {
+      // console.error(errorEvent);
     };
   }
 
@@ -69,7 +101,7 @@ class Client13jsonRWS {
    * @returns {void}
    */
   onMessage(cb) {
-    this.ws.onmessage = (event) => {
+    this.wsocket.onmessage = (event) => {
       const msg = event.data;
       this.debugger('Received: ', msg);
       const msgObj = jsonRWS.incoming(msg); // test against subprotocol rules and convert string to object
@@ -90,7 +122,7 @@ class Client13jsonRWS {
     // send the question
     const payload = undefined;
     const to = this.socketID;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
 
     // receive the answer
     return new Promise(async (resolve, reject) => {
@@ -147,9 +179,12 @@ class Client13jsonRWS {
   /************* SEND MESSAGE TO OTHER CLIENTS ************/
   /**
    * Send message to the websocket server if the connection is not closed (https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState).
+   * @param {number} to - final destination: 210201164339351900
+   * @param {string} cmd - command
+   * @param {any} payload - message payload
    * @returns {void}
    */
-  carryOut(cmd, payload, to) {
+  carryOut(to, cmd, payload) {
     const id = helper.generateID(); // the message ID
     const from = +this.socketID; // the sender ID
     if (!to) { to = 0; } // server ID is 0
@@ -157,8 +192,8 @@ class Client13jsonRWS {
     const msg = jsonRWS.outgoing(msgObj);
 
     // the message must be defined and client must be connected to the server
-    if (!!msg && !!this.ws && this.ws.readyState === 1) {
-      this.ws.send(msg);
+    if (!!msg && !!this.wsocket && this.wsocket.readyState === 1) {
+      this.wsocket.send(msg);
     } else {
       throw new Error('The message is not defined or the client is disconnected.');
     }
@@ -174,7 +209,7 @@ class Client13jsonRWS {
   sendOne(to, msg) {
     const cmd = 'socket/sendone';
     const payload = msg;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
 
@@ -187,7 +222,7 @@ class Client13jsonRWS {
   send(to, msg) {
     const cmd = 'socket/send';
     const payload = msg;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
 
@@ -222,10 +257,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   roomEnter(roomName) {
+    const to = 0;
     const cmd = 'room/enter';
     const payload = roomName;
-    const to = 0;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
   /**
@@ -234,10 +269,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   roomExit(roomName) {
+    const to = 0;
     const cmd = 'room/exit';
     const payload = roomName;
-    const to = 0;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
   /**
@@ -245,10 +280,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   roomExitAll() {
+    const to = 0;
     const cmd = 'room/exitall';
     const payload = undefined;
-    const to = 0;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
   /**
@@ -258,10 +293,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   roomSend(roomName, msg) {
+    const to = roomName;
     const cmd = 'room/send';
     const payload = msg;
-    const to = roomName;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
 
@@ -274,10 +309,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   setNick(nickname) {
+    const to = 0;
     const cmd = 'socket/nick';
     const payload = nickname;
-    const to = 0;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
 
@@ -288,10 +323,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   route(uri, body) {
+    const to = 0;
     const cmd = 'route';
     const payload = {uri, body};
-    const to = 0;
-    this.carryOut(cmd, payload, to);
+    this.carryOut(to, cmd, payload);
   }
 
 

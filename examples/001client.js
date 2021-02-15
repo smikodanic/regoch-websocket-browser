@@ -129,7 +129,10 @@ class TestClient extends window.regoch.Client13jsonRWS {
 
 const wcOpts = {
   wsURL: 'ws://localhost:3211?authkey=TRTmrt',
-  timeout: 3*1000, // 3 secs
+  timeout: 3*1000, // wait 3secs for answer
+  recconectAttempts: 5, // try to reconnect 5 times
+  recconectDelay: 6000, // delay between reconnections is 6 seconds
+  subprotocol: true,
   debug: true
 };
 
