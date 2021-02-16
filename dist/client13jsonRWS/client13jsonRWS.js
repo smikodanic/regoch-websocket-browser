@@ -50,8 +50,6 @@ class Client13jsonRWS {
   async reconnect() {
     const attempts = this.wcOpts.recconectAttempts;
     const delay = this.wcOpts.recconectDelay;
-    console.log(this.attempt, attempts, delay);
-
     if (this.attempt <= attempts) {
       await helper.sleep(delay);
       this.connect();
