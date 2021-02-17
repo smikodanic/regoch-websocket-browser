@@ -122,6 +122,37 @@ class TestClient extends window.regoch.Client13jsonRWS {
   }
 
 
+  route_test2() {
+    const uri = document.getElementById('routeUri2').value;
+    this.route(uri);
+
+    // receive route
+    this.onMessage((msg, msgSTR) => {
+      console.log('route msg::', msg);
+      // router transitional variable
+      const router = this.router;
+      const payload = msg.payload; // {uri:string, body?:any}
+
+      // router transitional varaible
+      router.trx = {
+        uri: payload.uri,
+        body: payload.body,
+        client: this
+      };
+
+      // route definitions
+      router.def('/returned/back/:n', (trx) => { console.log('trx.params::', trx.params); });
+      router.notfound((trx) => { console.log(`The URI not found: ${trx.uri}`); });
+
+      // execute the router
+      router.exe().catch(err => {
+        console.log(err);
+      });
+
+    });
+  }
+
+
 }
 
 

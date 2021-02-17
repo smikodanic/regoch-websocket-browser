@@ -4,6 +4,7 @@
  * - subprotocol: jsonRWS
  */
 const jsonRWS = require('./lib/subprotocol/jsonRWS');
+const Router = require('./lib/Router');
 const helper = require('./lib/helper');
 
 
@@ -29,6 +30,8 @@ class Client13jsonRWS {
     const wsURL = this.wcOpts.wsURL; // websocket URL: ws://localhost:3211/something?authkey=TRTmrt
     this.wsocket = new WebSocket(wsURL, this.wcOpts.subprotocols);
     this.onEvents();
+
+    this.router = new Router(this.wcOpts.debug);
   }
 
 
@@ -99,10 +102,10 @@ class Client13jsonRWS {
    */
   onMessage(cb) {
     this.wsocket.onmessage = (event) => {
-      const msg = event.data;
-      this.debugger('Received: ', msg);
-      const msgObj = jsonRWS.incoming(msg); // test against subprotocol rules and convert string to object
-      cb(msgObj);
+      const msgSTR = event.data;
+      this.debugger('Received: ', msgSTR);
+      const msg = jsonRWS.incoming(msgSTR); // test against subprotocol rules and convert string to object
+      cb(msg, msgSTR);
     };
   }
 
@@ -342,4 +345,4 @@ class Client13jsonRWS {
 }
 
 
-window.regoch = { Client13jsonRWS };
+window.regoch = { Client13jsonRWS, Router };
