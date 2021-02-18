@@ -5,6 +5,13 @@ class TestClient extends window.regoch.Client13jsonRWS {
   }
 
 
+  async connectMe() {
+    const wsocket = await this.connect();
+    console.log('+++Connected', wsocket);
+    this.messageReceiver();
+  }
+
+
   /*** Questions Tests */
   async infoSocketId_test() {
     try {
@@ -127,7 +134,7 @@ class TestClient extends window.regoch.Client13jsonRWS {
     this.route(uri);
 
     // receive route
-    this.onMessage((msg, msgSTR) => {
+    this.once('route', (msg, msgSTR) => {
       console.log('route msg::', msg);
       // router transitional variable
       const router = this.router;
@@ -149,6 +156,15 @@ class TestClient extends window.regoch.Client13jsonRWS {
         console.log(err);
       });
 
+    });
+  }
+
+
+  messageReceiver() {
+    this.on('message', (msg, msgSTR) => {
+      console.log('message SUBPROTOCOL', msg); // message after subprotocol
+      console.log('message STRING', msgSTR); // received message
+      $('#incomingMessage').text(msg.payload);
     });
   }
 

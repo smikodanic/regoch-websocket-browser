@@ -3,6 +3,7 @@
  * - websocket version: 13
  * - subprotocol: jsonRWS
  */
+const { EventEmitter } = require('events');
 const jsonRWS = require('./lib/subprotocol/jsonRWS');
 const Router = require('./lib/Router');
 const helper = require('./lib/helper');
@@ -18,6 +19,10 @@ class Client13jsonRWS {
     this.wsocket; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
     this.socketID; // socket ID number, for example: 210214082949459100
     this.attempt = 1; // reconnect attempt counter
+    this.eventEmitter = new EventEmitter();
+    this.eventEmitter.setMaxListeners(8);
+
+    this.router = new Router(this.wcOpts.debug);
   }
 
 
@@ -29,9 +34,15 @@ class Client13jsonRWS {
   connect() {
     const wsURL = this.wcOpts.wsURL; // websocket URL: ws://localhost:3211/something?authkey=TRTmrt
     this.wsocket = new WebSocket(wsURL, this.wcOpts.subprotocols);
+
     this.onEvents();
 
-    this.router = new Router(this.wcOpts.debug);
+    // return socket as promise
+    return new Promise(resolve => {
+      // this.eventEmitter.removeAllListeners(); // not needed if once() is used
+      this.eventEmitter.once('connected', () => { resolve(this.wsocket); });
+      // console.log(`"connected" listeners: ${this.eventEmitter.listenerCount('connected')}`.cliBoja('yellow'));
+    });
   }
 
 
@@ -70,6 +81,9 @@ class Client13jsonRWS {
       console.log('WS Connection opened');
       this.attempt = 1;
       this.socketID = await this.infoSocketId();
+      console.log(`socketID: ${this.socketID}`);
+      this.eventEmitter.emit('connected');
+      this.onMessage(false, true); // emits the messages to eventEmitter
     };
 
     this.wsocket.onclose = (closeEvt) => {
@@ -86,19 +100,31 @@ class Client13jsonRWS {
 
 
 
-
   /************* RECEIVER ************/
   /**
    * Receive the message event and push it to msgStream.
-   * @param {Function} - callback function
+   * @param {Function} cb - callback function
+   * @param {boolean} toEmit - to emit the message into the eventEmitter
    * @returns {void}
    */
-  onMessage(cb) {
+  onMessage(cb, toEmit) {
     this.wsocket.onmessage = (event) => {
-      const msgSTR = event.data;
-      this.debugger('Received: ', msgSTR);
-      const msg = jsonRWS.incoming(msgSTR); // test against subprotocol rules and convert string to object
-      cb(msg, msgSTR);
+      try {
+        const msgSTR = event.data;
+        this.debugger('Received::', msgSTR);
+        const msg = jsonRWS.incoming(msgSTR); // test against subprotocol rules and convert string to object
+
+        if(!!cb) { cb(msg, msgSTR); }
+
+        if (!!toEmit) {
+          if (msg.cmd === 'route') { this.eventEmitter.emit('route', msg, msgSTR); }
+          else { this.eventEmitter.emit('message', msg, msgSTR); }
+        }
+
+      } catch (err) {
+        console.error(err);
+      }
+
     };
   }
 
@@ -121,7 +147,7 @@ class Client13jsonRWS {
     return new Promise(async (resolve, reject) => {
       this.onMessage(async (msgObj) => {
         if (msgObj.cmd === cmd) { resolve(msgObj); }
-      });
+      }, false);
       await helper.sleep(this.wcOpts.timeout);
       reject(new Error(`No answer for the question: ${cmd}`));
     });
@@ -183,6 +209,7 @@ class Client13jsonRWS {
     if (!to) { to = 0; } // server ID is 0
     const msgObj = {id, from, to, cmd, payload};
     const msg = jsonRWS.outgoing(msgObj);
+    this.debugger('Sent::', msg);
 
     // the message must be defined and client must be connected to the server
     if (!!msg && !!this.wsocket && this.wsocket.readyState === 1) {
@@ -225,9 +252,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   broadcast(msg) {
+    const to = 0;
     const cmd = 'socket/broadcast';
     const payload = msg;
-    this.carryOut(cmd, payload);
+    this.carryOut(to, cmd, payload);
   }
 
   /**
@@ -236,9 +264,10 @@ class Client13jsonRWS {
    * @returns {void}
    */
   sendAll(msg) {
+    const to = 0;
     const cmd = 'socket/sendall';
     const payload = msg;
-    this.carryOut(cmd, payload);
+    this.carryOut(to, cmd, payload);
   }
 
 
@@ -324,6 +353,7 @@ class Client13jsonRWS {
 
 
 
+  /*********** MISC ************/
   /**
    * Debugger. Use it as this.debug(var1, var2, var3)
    * @returns {void}
@@ -331,6 +361,24 @@ class Client13jsonRWS {
   debugger(...textParts) {
     const text = textParts.join('');
     if (this.wcOpts.debug) { console.log(text); }
+  }
+
+  /**
+   * Wrapper around the eventEmitter
+   * @param {string} eventName - event name: 'connected', 'message', 'route'
+   * @param {Function} listener - callback function
+   */
+  on(eventName, listener) {
+    return this.eventEmitter.on(eventName, listener);
+  }
+
+  /**
+   * Wrapper around the eventEmitter
+   * @param {string} eventName - event name: 'connected', 'message', 'route'
+   * @param {Function} listener - callback function
+   */
+  once(eventName, listener) {
+    return this.eventEmitter.once(eventName, listener);
   }
 
 

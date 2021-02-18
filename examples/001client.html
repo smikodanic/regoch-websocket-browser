@@ -19,6 +19,10 @@
       [data-text] {
         color: brown;
       }
+      #incomingMessage {
+        color:orange;
+        font-size: smaller;
+      }
     </style>
   </head>
   <body>
@@ -27,7 +31,7 @@
     Open your browser's developer tools to see the activity.</p>
 
     <h3>Connection Test</h3>
-    <button onclick="testCB.connect()">Connect</button>
+    <button onclick="testCB.connectMe()">Connect</button>
     <button onclick="testCB.disconnect()">Disconnect</button>
 
 
@@ -71,6 +75,11 @@
       <button onclick="testCB.route_test()">send route</button>
 
     <br><input type="text" id="routeUri2" placeholder="uri" value="/send/me/back"><button onclick="testCB.route_test2()">return route</button>
+
+
+    <br><br>
+    <h4>Incoming Messages</h4>
+    <p id="incomingMessage"></p>
 
 
     <br><br>

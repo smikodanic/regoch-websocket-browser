@@ -7,6 +7,7 @@
     "window": true,
     "Event": true,
     "CustomEvent": true,
+    "EventTarget": true,
     "$": true
 	},
 	"env": {
