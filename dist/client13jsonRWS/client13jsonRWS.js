@@ -61,34 +61,27 @@ class Client13jsonRWS {
   }
 
 
-  /**
-   * Reset the properties.
-   */
-  reset() {
-    delete this.clientRequest;
-    if (!!this.socket) { this.socket.unref(); }
-    delete this.socket;
-  }
-
 
   /**
    * Event listeners.
    * @returns {void}
    */
   onEvents() {
-    this.wsocket.onopen = async (conn) => {
-      this.socketID = await this.infoSocketId();
+    this.wsocket.onopen = async (openEvt) => {
       console.log('WS Connection opened');
+      this.attempt = 1;
+      this.socketID = await this.infoSocketId();
     };
 
-    this.wsocket.onclose = () => {
+    this.wsocket.onclose = (closeEvt) => {
       console.log('WS Connection closed');
-      this.reset();
+      delete this.wsocket; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
+      delete this.socketID;
       this.reconnect();
     };
 
-    this.wsocket.onerror = (errorEvent) => {
-      // console.error(errorEvent);
+    this.wsocket.onerror = (errorEvt) => {
+      // console.error(errorEvt);
     };
   }
 
