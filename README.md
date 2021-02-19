@@ -82,6 +82,16 @@ const testCB = new TestClient(wcOpts);
 ```
 
 
+## subprotocol "jsonRWS"
+*Subprotocol description:*
+The subprotocol is created for communication between websocket server and client.
+
+*Subprotocol definitons:*
+a) Client have to send message in valid JSON format. Fields: **{id:number, from:number, tonumber|string|number[], cmd:string, payload?:any}**
+b) Server have to send message in valid JSON format. Fields: **{id:number, from:number, tonumber|string|number[], cmd:string, payload?:any}**
+c) The incoming message is converted from string to object.
+d) The outgoing message is converted from object to string.
+
 
 
 ### Licence
