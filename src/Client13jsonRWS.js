@@ -353,16 +353,8 @@ class Client13jsonRWS {
 
 
 
-  /*********** MISC ************/
-  /**
-   * Debugger. Use it as this.debug(var1, var2, var3)
-   * @returns {void}
-   */
-  debugger(...textParts) {
-    const text = textParts.join('');
-    if (this.wcOpts.debug) { console.log(text); }
-  }
 
+  /*********** LISTENERS ************/
   /**
    * Wrapper around the eventEmitter
    * @param {string} eventName - event name: 'connected', 'message', 'route'
@@ -380,6 +372,19 @@ class Client13jsonRWS {
   once(eventName, listener) {
     return this.eventEmitter.once(eventName, listener);
   }
+
+
+
+  /*********** MISC ************/
+  /**
+   * Debugger. Use it as this.debug(var1, var2, var3)
+   * @returns {void}
+   */
+  debugger(...textParts) {
+    const text = textParts.join('');
+    if (this.wcOpts.debug) { console.log(text); }
+  }
+
 
 
 
