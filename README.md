@@ -73,7 +73,7 @@ const wcOpts = {
   debug: false
 };
 
-const tc = new TestClient(wcOpts);
+const testCB = new TestClient(wcOpts);
 ```
 
 ```html
