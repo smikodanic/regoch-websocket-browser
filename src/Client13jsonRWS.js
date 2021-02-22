@@ -12,7 +12,7 @@ const helper = require('./lib/helper');
 class Client13jsonRWS {
 
   /**
-   * @param {{wsURL:string, timeout:number, recconectAttempts:number, reconnectDelay:number, subprotocols:string[], debug:boolean}} wcOpts - websocket client options
+   * @param {{wsURL:string, timeout:number, reconnectAttempts:number, reconnectDelay:number, subprotocols:string[], debug:boolean}} wcOpts - websocket client options
    */
   constructor(wcOpts) {
     this.wcOpts = wcOpts; // websocket client options
@@ -29,7 +29,7 @@ class Client13jsonRWS {
   /************* CLIENT CONNECTOR ************/
   /**
    * Connect to the websocket server.
-   * @returns {void}
+   * @returns {Promise<Socket>}
    */
   connect() {
     const wsURL = this.wcOpts.wsURL; // websocket URL: ws://localhost:3211/something?authkey=TRTmrt
@@ -60,8 +60,8 @@ class Client13jsonRWS {
    * This method is fired on every 'close' socket's event.
    */
   async reconnect() {
-    const attempts = this.wcOpts.recconectAttempts;
-    const delay = this.wcOpts.recconectDelay;
+    const attempts = this.wcOpts.reconnectAttempts;
+    const delay = this.wcOpts.reconnectDelay;
     if (this.attempt <= attempts) {
       await helper.sleep(delay);
       this.connect();
