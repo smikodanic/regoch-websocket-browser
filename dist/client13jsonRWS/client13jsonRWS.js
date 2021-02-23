@@ -497,11 +497,13 @@ class Client13jsonRWS {
     this.wcOpts = wcOpts; // websocket client options
     this.wsocket; // Websocket instance https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
     this.socketID; // socket ID number, for example: 210214082949459100
+
     this.attempt = 1; // reconnect attempt counter
+
     this.eventEmitter = new EventEmitter();
     this.eventEmitter.setMaxListeners(8);
 
-    this.router = new Router(this.wcOpts.debug);
+    this.router = new Router({debug: wcOpts.debug});
   }
 
 
@@ -530,7 +532,8 @@ class Client13jsonRWS {
    * @returns {void}
    */
   disconnect() {
-    this.wsocket.close();
+    if (!!this.wsocket) { this.wsocket.close(); }
+    this.blockReconnect();
   }
 
 
@@ -547,6 +550,14 @@ class Client13jsonRWS {
       console.log(`Reconnect attempt #${this.attempt} of ${attempts} in ${delay}ms`);
       this.attempt++;
     }
+  }
+
+
+  /**
+   * Block reconnect usually after disconnect() method is used.
+   */
+  blockReconnect() {
+    this.attempt = this.wcOpts.reconnectAttempts + 1;
   }
 
 
@@ -870,7 +881,7 @@ class Client13jsonRWS {
 }
 
 
-window.regoch = { Client13jsonRWS, Router };
+window.regoch = { Client13jsonRWS, Router, helper };
 
 },{"./lib/Router":3,"./lib/helper":4,"./lib/subprotocol/jsonRWS":5,"events":1}],3:[function(require,module,exports){
 /**

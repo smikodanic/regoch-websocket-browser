@@ -22,10 +22,13 @@ npm install --save regoch-websocket-browser
 - [browserify](http://browserify.org/)
 
 
+
 ## Development
 ```bash
 npm run dev
 ```
+This command will watch for file "Client13jsonRWS.js" changes and build in /dist/ folder by the gulp and browserify.
+
 
 ## API
 - **connect()** - connect to the websocket server

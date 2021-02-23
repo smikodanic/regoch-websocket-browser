@@ -18,6 +18,8 @@
       }
       [data-text] {
         color: brown;
+        font-size: smaller;
+        margin-left: 5px;
       }
       #incomingMessage {
         color:orange;
@@ -36,21 +38,21 @@
 
 
 
-    <h3>Message Test</h3>
+    <h3>Message Properties</h3>
     <p>{id:number, from:number, to:number|number[]|string, cmd:string, payload?:any}</p>
 
 
     <h4>Questions</h4>
-    <button onclick="testCB.infoSocketId_test()">Get my ID</button> <span style="font-size:smaller" data-text="socketID"></span>
-    <br><button onclick="testCB.infoSocketList_test()">List socket IDs</button> <span style="font-size:smaller" data-text="socketIDs"></span>
-    <br><button onclick="testCB.infoRoomList_test()">List all rooms</button> <span style="font-size:smaller" data-text="roomNames"></span>
-    <br><button onclick="testCB.infoRoomListmy_test()">List my rooms</button> <span style="font-size:smaller" data-text="myRoomNames"></span>
+    <button onclick="testCB.infoSocketId_test()">Get my ID</button> <span data-text="socketID"></span>
+    <br><button onclick="testCB.infoSocketList_test()">List socket IDs</button> <span data-text="socketIDs"></span>
+    <br><button onclick="testCB.infoRoomList_test()">List all rooms</button> <span data-text="roomNames"></span>
+    <br><button onclick="testCB.infoRoomListmy_test()">List my rooms</button> <span data-text="myRoomNames"></span>
 
 
     <br><br>
     <h4>Send message</h4>
     <input type="number" id="to1" placeholder="to"><input type="text" id="payload1" placeholder="payload (message)"><button onclick="testCB.sendOne_test()">send one</button>
-    <br><input type="string" id="to2" placeholder="to"><input type="text" id="payload2" placeholder="payload (message)"><button onclick="testCB.send_test()">send many</button>
+    <br><input type="string" id="to2" placeholder="to (separate IDs with comma)"><input type="text" id="payload2" placeholder="payload (message)"><button onclick="testCB.send_test()">send many</button>
     <br><input type="text" id="payload3" placeholder="payload (message)"><button onclick="testCB.broadcast_test()">broadcast</button> - send to all but not the sender
     <br><input type="text" id="payload4" placeholder="payload (message)"><button onclick="testCB.sendAll_test()">send all</button> - send to all clients
 

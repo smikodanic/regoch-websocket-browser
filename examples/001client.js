@@ -85,9 +85,9 @@ class TestClient extends window.regoch.Client13jsonRWS {
 
 
   // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
-  printInfo() {
-    const msgSize = this.getMessageSize(this.msg);
-    if (this.ws && this.ws.readyState === 1) { console.log(`Sent (${msgSize}): ${this.msg}`); }
+  printInfo(msg) {
+    const msgSize = window.regoch.helper.getMessageSize(msg);
+    if (this.wsocket && this.wsocket.readyState === 1) { console.log(`Sent (${msgSize}): ${msg}`); }
   }
 
 
