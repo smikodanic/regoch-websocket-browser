@@ -19,7 +19,7 @@
     "websocket client",
     "regoch"
   ],
-  "main": "dist/clientBrowser-min.js",
+  "main": "src/Client13jsonRWS.js",
   "scripts": {
     "inst": "rm -rf node_modules && npm install",
     "dev": "gulp default"
