@@ -161,7 +161,9 @@ class TestClient extends window.regoch.Client13jsonRWS {
 
 
   messageReceiver() {
-    this.on('message', (msg, msgSTR) => {
+    this.on('message', event => {
+      const msg = event.detail.msg;
+      const msgSTR = event.detail.msgSTR;
       console.log('message SUBPROTOCOL', msg); // message after subprotocol
       console.log('message STRING', msgSTR); // received message
       $('#incomingMessage').text(msg.payload);

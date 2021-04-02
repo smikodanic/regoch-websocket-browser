@@ -12,11 +12,11 @@ npm install --save regoch-websocket-browser
 [www.regoch.org](http://www.regoch.org/websocket-client-browser)
 
 
-## Websocket Server Features
+## Websocket Client for Browser Features
 - websocket version: **13**
 - subprotocol: **[jsonRWS](http://www.regoch.org/websocket-protocol-jsonRWS)**
 - chat in the rooms
-- small file size (*~4kB only*)
+- small file size -minified (*~7.5kB only*)
 - powerful API
 - possible RxJS integration
 - [browserify](http://browserify.org/)

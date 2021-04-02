@@ -3,7 +3,7 @@
  * - websocket version: 13
  * - subprotocol: jsonRWS
  */
-const { EventEmitter } = require('events');
+const eventEmitter = require('./lib/eventEmitter');
 const jsonRWS = require('./lib/subprotocol/jsonRWS');
 const Router = require('./lib/Router');
 const helper = require('./lib/helper');
@@ -20,10 +20,6 @@ class Client13jsonRWS {
     this.socketID; // socket ID number, for example: 210214082949459100
 
     this.attempt = 1; // reconnect attempt counter
-
-    this.eventEmitter = new EventEmitter();
-    this.eventEmitter.setMaxListeners(8);
-
     this.router = new Router({debug: wcOpts.debug});
   }
 
@@ -41,9 +37,9 @@ class Client13jsonRWS {
 
     // return socket as promise
     return new Promise(resolve => {
-      // this.eventEmitter.removeAllListeners(); // not needed if once() is used
-      this.eventEmitter.once('connected', () => { resolve(this.wsocket); });
-      // console.log(`"connected" listeners: ${this.eventEmitter.listenerCount('connected')}`.cliBoja('yellow'));
+      // eventEmitter.removeAllListeners(); // not needed if once() is used
+      eventEmitter.once('connected', () => { resolve(this.wsocket); });
+      // console.log(`"connected" listeners: ${eventEmitter.listenerCount('connected')}`.cliBoja('yellow'));
     });
   }
 
@@ -93,7 +89,7 @@ class Client13jsonRWS {
       this.attempt = 1;
       this.socketID = await this.infoSocketId();
       console.log(`socketID: ${this.socketID}`);
-      this.eventEmitter.emit('connected');
+      eventEmitter.emit('connected');
       this.onMessage(false, true); // emits the messages to eventEmitter
     };
 
@@ -128,8 +124,9 @@ class Client13jsonRWS {
         if(!!cb) { cb(msg, msgSTR); }
 
         if (!!toEmit) {
-          if (msg.cmd === 'route') { this.eventEmitter.emit('route', msg, msgSTR); }
-          else { this.eventEmitter.emit('message', msg, msgSTR); }
+          const detail = {msg, msgSTR};
+          if (msg.cmd === 'route') { eventEmitter.emit('route', detail); }
+          else { eventEmitter.emit('message', detail); }
         }
 
       } catch (err) {
@@ -369,19 +366,19 @@ class Client13jsonRWS {
   /**
    * Wrapper around the eventEmitter
    * @param {string} eventName - event name: 'connected', 'message', 'route'
-   * @param {Function} listener - callback function
+   * @param {Function} listener - callback function, for example: event => { console.log(event.detail); }
    */
   on(eventName, listener) {
-    return this.eventEmitter.on(eventName, listener);
+    return eventEmitter.on(eventName, listener);
   }
 
   /**
    * Wrapper around the eventEmitter
    * @param {string} eventName - event name: 'connected', 'message', 'route'
-   * @param {Function} listener - callback function
+   * @param {Function} listener - callback function, for example: event => { console.log(event.detail); }
    */
   once(eventName, listener) {
-    return this.eventEmitter.once(eventName, listener);
+    return eventEmitter.once(eventName, listener);
   }
 
 
