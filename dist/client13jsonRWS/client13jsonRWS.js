@@ -86,12 +86,12 @@ class Client13jsonRWS {
    */
   onEvents() {
     this.wsocket.onopen = async (openEvt) => {
+      this.onMessage();
       console.log('WS Connection opened');
       this.attempt = 1;
       this.socketID = await this.infoSocketId();
       console.log(`socketID: ${this.socketID}`);
       eventEmitter.emit('connected');
-      this.onMessage(false, true); // emits the messages to eventEmitter
     };
 
     this.wsocket.onclose = (closeEvt) => {
@@ -111,29 +111,26 @@ class Client13jsonRWS {
   /************* RECEIVER ************/
   /**
    * Receive the message event and push it to msgStream.
-   * @param {Function} cb - callback function
-   * @param {boolean} toEmit - to emit the message into the eventEmitter
    * @returns {void}
    */
-  onMessage(cb, toEmit) {
-    this.wsocket.onmessage = (event) => {
+  onMessage() {
+    this.wsocket.onmessage = event => {
       try {
         const msgSTR = event.data;
         this.debugger('Received::', msgSTR);
-        const msg = jsonRWS.incoming(msgSTR); // test against subprotocol rules and convert string to object
+        const msg = jsonRWS.incoming(msgSTR); // test against subprotocol rules and convert string to object);
 
-        if(!!cb) { cb(msg, msgSTR); }
-
-        if (!!toEmit) {
-          const detail = {msg, msgSTR};
-          if (msg.cmd === 'route') { eventEmitter.emit('route', detail); }
-          else { eventEmitter.emit('message', detail); }
-        }
+        const detail = {msg, msgSTR};
+        if (msg.cmd === 'route') { eventEmitter.emit('route', detail); }
+        else if (msg.cmd === 'info/socket/id') { eventEmitter.emit('question', detail); }
+        else if (msg.cmd === 'info/socket/list') { eventEmitter.emit('question', detail); }
+        else if (msg.cmd === 'info/room/list') { eventEmitter.emit('question', detail); }
+        else if (msg.cmd === 'info/room/listmy') { eventEmitter.emit('question', detail); }
+        else { eventEmitter.emit('message', detail); }
 
       } catch (err) {
         console.error(err);
       }
-
     };
   }
 
@@ -154,9 +151,10 @@ class Client13jsonRWS {
 
     // receive the answer
     return new Promise(async (resolve, reject) => {
-      this.onMessage(async (msgObj) => {
-        if (msgObj.cmd === cmd) { resolve(msgObj); }
-      }, false);
+      this.once('question', async (msg, msgSTR) => {
+        if (msg.cmd === cmd) { resolve(msg); }
+        else { reject(new Error('Recived cmd is not same as sent cmd.')); }
+      });
       await helper.sleep(this.wcOpts.timeout);
       reject(new Error(`No answer for the question: ${cmd}`));
     });
@@ -366,20 +364,32 @@ class Client13jsonRWS {
   /*********** LISTENERS ************/
   /**
    * Wrapper around the eventEmitter
-   * @param {string} eventName - event name: 'connected', 'message', 'route'
-   * @param {Function} listener - callback function, for example: event => { console.log(event.detail); }
+   * @param {string} eventName - event name: 'connected', 'message', 'route', 'question
+   * @param {Function} listener - callback function, for example: (msg, msgSTR) => { console.log(msgSTR); }
    */
   on(eventName, listener) {
-    return eventEmitter.on(eventName, listener);
+    return eventEmitter.on(eventName, event => {
+      listener.call(null, event.detail.msg, event.detail.msgSTR);
+    });
   }
 
   /**
    * Wrapper around the eventEmitter
-   * @param {string} eventName - event name: 'connected', 'message', 'route'
-   * @param {Function} listener - callback function, for example: event => { console.log(event.detail); }
+   * @param {string} eventName - event name: 'connected', 'message', 'route', 'question
+   * @param {Function} listener - callback function, for example: (msg, msgSTR) => { console.log(msgSTR); }
    */
   once(eventName, listener) {
-    return eventEmitter.once(eventName, listener);
+    return eventEmitter.on(eventName, event => {
+      listener.call(null, event.detail.msg, event.detail.msgSTR);
+    });
+  }
+
+  /**
+   * Wrapper around the eventEmitter
+   * @param {string} eventName - event name: 'connected', 'message', 'route', 'question
+   */
+  off(eventName) {
+    return eventEmitter.off(eventName);
   }
 
 
@@ -401,6 +411,7 @@ class Client13jsonRWS {
 
 
 window.regoch = { Client13jsonRWS, Router, helper };
+module.exports = { Client13jsonRWS, Router, helper };
 
 },{"./lib/Router":2,"./lib/eventEmitter":3,"./lib/helper":4,"./lib/subprotocol/jsonRWS":5}],2:[function(require,module,exports){
 /**
