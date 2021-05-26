@@ -56,7 +56,7 @@ class EventEmitter {
     const activeOns = this.activeOns.filter(act => act.eventName === eventName);
     for (const activeOn of activeOns) {
       window.removeEventListener(eventName, activeOn.listenerCB);
-      console.log('removed listener on--', eventName, activeOn.listenerCB);
+      // console.log('removed listener on--', eventName, activeOn.listenerCB);
     }
   }
 
