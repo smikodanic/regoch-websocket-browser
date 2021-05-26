@@ -1,5 +1,9 @@
 class EventEmitter {
 
+  constructor() {
+    this.activeOns = []; // [{eventName:string, listenerCB:Function}]
+  }
+
   /**
    * Create and emit the event
    * @param {string} eventName - event name, for example: 'pushstate'
@@ -19,9 +23,11 @@ class EventEmitter {
    * @returns {void}
    */
   on(eventName, listener) {
-    window.addEventListener(eventName, event => {
-      listener(event);
-    });
+    const listenerCB = event => { listener(event); };
+    this.activeOns = this.activeOns.filter(act => !(act.eventName === eventName && act.listenerCB.toString() === listenerCB.toString())); // remove previously added activeOns
+    this.activeOns.push({eventName, listenerCB}); // push new activeOn
+    // console.log('activeOns::', this.activeOns);
+    window.addEventListener(eventName, listenerCB);
   }
 
 
@@ -32,20 +38,26 @@ class EventEmitter {
    * @returns {void}
    */
   once(eventName, listener) {
-    window.addEventListener(eventName, event => {
+    const listenerCB = event => {
       listener(event);
-      window.removeEventListener(eventName, () => {});
-    }, {once: true});
+      window.removeEventListener(eventName, listenerCB);
+    };
+    window.addEventListener(eventName, listenerCB, {once: true});
   }
 
 
   /**
-   * Stop listening the event
+   * Stop listening the event for multiple listeners defined with on().
+   * For example eventEmitter.on('msg', fja1) & eventEmitter.on('msg', fja2) then eventEmitter.off('msg') will remove fja1 and fja2 listeners.
    * @param {string} eventName - event name, for example: 'pushstate'
    * @returns {void}
    */
   off(eventName) {
-    window.removeEventListener(eventName, event => {});
+    const activeOns = this.activeOns.filter(act => act.eventName === eventName);
+    for (const activeOn of activeOns) {
+      window.removeEventListener(eventName, activeOn.listenerCB);
+      console.log('removed listener on--', eventName, activeOn.listenerCB);
+    }
   }
 
 
