@@ -24,9 +24,18 @@ class EventEmitter {
    */
   on(eventName, listener) {
     const listenerCB = event => { listener(event); };
-    this.activeOns = this.activeOns.filter(act => !(act.eventName === eventName && act.listenerCB.toString() === listenerCB.toString())); // remove previously added activeOns
-    this.activeOns.push({eventName, listenerCB}); // push new activeOn
-    // console.log('activeOns::', this.activeOns);
+
+    // remove duplicated listeners
+    let ind = 0;
+    for (const activeOn of this.activeOns) {
+      if (activeOn.eventName === eventName && activeOn.listenerCB.toString() === listenerCB.toString()) {
+        window.removeEventListener(eventName, activeOn.listenerCB);
+        this.activeOns.splice(ind, 1);
+      }
+      ind++;
+    }
+
+    this.activeOns.push({eventName, listenerCB});
     window.addEventListener(eventName, listenerCB);
   }
 
@@ -53,11 +62,24 @@ class EventEmitter {
    * @returns {void}
    */
   off(eventName) {
-    const activeOns = this.activeOns.filter(act => act.eventName === eventName);
-    for (const activeOn of activeOns) {
-      window.removeEventListener(eventName, activeOn.listenerCB);
-      // console.log('removed listener on--', eventName, activeOn.listenerCB);
+    let ind = 0;
+    for (const activeOn of this.activeOns) {
+      if (activeOn.eventName === eventName) {
+        window.removeEventListener(eventName, activeOn.listenerCB);
+        this.activeOns.splice(ind, 1);
+      }
+      ind++;
     }
+  }
+
+
+
+  /**
+   * Get all active listeners.
+   * @returns {{eventName:string, listenerCB:Function}[]}
+   */
+  getListeners() {
+    return {...this.activeOns};
   }
 
 
