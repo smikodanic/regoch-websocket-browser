@@ -12,7 +12,7 @@ const helper = require('./lib/helper');
 class Client13jsonRWS {
 
   /**
-   * @param {{wsURL:string, timeout:number, reconnectAttempts:number, reconnectDelay:number, subprotocols:string[], debug:boolean}} wcOpts - websocket client options
+   * @param {{wsURL:string, questionTimeout:number, reconnectAttempts:number, reconnectDelay:number, subprotocols:string[], debug:boolean}} wcOpts - websocket client options
    */
   constructor(wcOpts) {
     this.wcOpts = wcOpts; // websocket client options
@@ -154,7 +154,7 @@ class Client13jsonRWS {
         if (msg.cmd === cmd) { resolve(msg); }
         else { reject(new Error('Recived cmd is not same as sent cmd.')); }
       });
-      await helper.sleep(this.wcOpts.timeout);
+      await helper.sleep(this.wcOpts.questionTimeout);
       reject(new Error(`No answer for the question: ${cmd}`));
     });
   }

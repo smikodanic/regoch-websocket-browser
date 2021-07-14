@@ -13,7 +13,7 @@ const helper = require('./lib/helper');
 class Client13jsonRWS {
 
   /**
-   * @param {{wsURL:string, timeout:number, reconnectAttempts:number, reconnectDelay:number, subprotocols:string[], debug:boolean}} wcOpts - websocket client options
+   * @param {{wsURL:string, questionTimeout:number, reconnectAttempts:number, reconnectDelay:number, subprotocols:string[], debug:boolean}} wcOpts - websocket client options
    */
   constructor(wcOpts) {
     this.wcOpts = wcOpts; // websocket client options
@@ -155,7 +155,7 @@ class Client13jsonRWS {
         if (msg.cmd === cmd) { resolve(msg); }
         else { reject(new Error('Recived cmd is not same as sent cmd.')); }
       });
-      await helper.sleep(this.wcOpts.timeout);
+      await helper.sleep(this.wcOpts.questionTimeout);
       reject(new Error(`No answer for the question: ${cmd}`));
     });
   }
@@ -210,7 +210,7 @@ class Client13jsonRWS {
    * @param {any} payload - message payload
    * @returns {void}
    */
-  carryOut(to, cmd, payload) {
+  async carryOut(to, cmd, payload) {
     const id = helper.generateID(); // the message ID
     const from = +this.socketID; // the sender ID
     if (!to) { to = 0; } // server ID is 0
@@ -220,6 +220,7 @@ class Client13jsonRWS {
 
     // the message must be defined and client must be connected to the server
     if (!!msg && !!this.wsocket && this.wsocket.readyState === 1) {
+      await new Promise(r => setTimeout(r, 100));
       this.wsocket.send(msg);
     } else {
       throw new Error('The message is not defined or the client is disconnected.');
@@ -233,10 +234,10 @@ class Client13jsonRWS {
    * @param {any} msg - message sent to the client
    * @returns {void}
    */
-  sendOne(to, msg) {
+  async sendOne(to, msg) {
     const cmd = 'socket/sendone';
     const payload = msg;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
 
@@ -246,10 +247,10 @@ class Client13jsonRWS {
    * @param {any} msg - message sent to the clients
    * @returns {void}
    */
-  send(to, msg) {
+  async send(to, msg) {
     const cmd = 'socket/send';
     const payload = msg;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
 
@@ -258,11 +259,11 @@ class Client13jsonRWS {
    * @param {any} msg - message sent to the clients
    * @returns {void}
    */
-  broadcast(msg) {
+  async broadcast(msg) {
     const to = 0;
     const cmd = 'socket/broadcast';
     const payload = msg;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
   /**
@@ -270,11 +271,11 @@ class Client13jsonRWS {
    * @param {any} msg - message sent to the clients
    * @returns {void}
    */
-  sendAll(msg) {
+  async sendAll(msg) {
     const to = 0;
     const cmd = 'socket/sendall';
     const payload = msg;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
 
@@ -285,11 +286,11 @@ class Client13jsonRWS {
    * @param {string} roomName
    * @returns {void}
    */
-  roomEnter(roomName) {
+  async roomEnter(roomName) {
     const to = 0;
     const cmd = 'room/enter';
     const payload = roomName;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
   /**
@@ -297,22 +298,22 @@ class Client13jsonRWS {
    * @param {string} roomName
    * @returns {void}
    */
-  roomExit(roomName) {
+  async roomExit(roomName) {
     const to = 0;
     const cmd = 'room/exit';
     const payload = roomName;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
   /**
    * Unsubscribe from all rooms.
    * @returns {void}
    */
-  roomExitAll() {
+  async roomExitAll() {
     const to = 0;
     const cmd = 'room/exitall';
     const payload = undefined;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
   /**
@@ -321,11 +322,11 @@ class Client13jsonRWS {
    * @param {any} msg
    * @returns {void}
    */
-  roomSend(roomName, msg) {
+  async roomSend(roomName, msg) {
     const to = roomName;
     const cmd = 'room/send';
     const payload = msg;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
 
@@ -337,11 +338,11 @@ class Client13jsonRWS {
    * @param {string} nickname - nick name
    * @returns {void}
    */
-  setNick(nickname) {
+  async setNick(nickname) {
     const to = 0;
     const cmd = 'socket/nick';
     const payload = nickname;
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
 
@@ -351,11 +352,11 @@ class Client13jsonRWS {
    * @param {any} body - body
    * @returns {void}
    */
-  route(uri, body) {
+  async route(uri, body) {
     const to = 0;
     const cmd = 'route';
     const payload = {uri, body};
-    this.carryOut(to, cmd, payload);
+    await this.carryOut(to, cmd, payload);
   }
 
 
@@ -772,6 +773,10 @@ module.exports = Router;
 },{}],3:[function(require,module,exports){
 class EventEmitter {
 
+  constructor() {
+    this.activeOns = []; // [{eventName:string, listenerCB:Function}]
+  }
+
   /**
    * Create and emit the event
    * @param {string} eventName - event name, for example: 'pushstate'
@@ -791,9 +796,20 @@ class EventEmitter {
    * @returns {void}
    */
   on(eventName, listener) {
-    window.addEventListener(eventName, event => {
-      listener(event);
-    });
+    const listenerCB = event => { listener(event); };
+
+    // remove duplicated listeners
+    let ind = 0;
+    for (const activeOn of this.activeOns) {
+      if (activeOn.eventName === eventName && activeOn.listenerCB.toString() === listenerCB.toString()) {
+        window.removeEventListener(eventName, activeOn.listenerCB);
+        this.activeOns.splice(ind, 1);
+      }
+      ind++;
+    }
+
+    this.activeOns.push({eventName, listenerCB});
+    window.addEventListener(eventName, listenerCB);
   }
 
 
@@ -804,20 +820,39 @@ class EventEmitter {
    * @returns {void}
    */
   once(eventName, listener) {
-    window.addEventListener(eventName, event => {
+    const listenerCB = event => {
       listener(event);
-      window.removeEventListener(eventName, () => {});
-    }, {once: true});
+      window.removeEventListener(eventName, listenerCB);
+    };
+    window.addEventListener(eventName, listenerCB, {once: true});
   }
 
 
   /**
-   * Stop listening the event
+   * Stop listening the event for multiple listeners defined with on().
+   * For example eventEmitter.on('msg', fja1) & eventEmitter.on('msg', fja2) then eventEmitter.off('msg') will remove fja1 and fja2 listeners.
    * @param {string} eventName - event name, for example: 'pushstate'
    * @returns {void}
    */
   off(eventName) {
-    window.removeEventListener(eventName, event => {});
+    let ind = 0;
+    for (const activeOn of this.activeOns) {
+      if (activeOn.eventName === eventName) {
+        window.removeEventListener(eventName, activeOn.listenerCB);
+        this.activeOns.splice(ind, 1);
+      }
+      ind++;
+    }
+  }
+
+
+
+  /**
+   * Get all active listeners.
+   * @returns {{eventName:string, listenerCB:Function}[]}
+   */
+  getListeners() {
+    return {...this.activeOns};
   }
 
 
