@@ -152,7 +152,7 @@ class Client13jsonRWS {
     return new Promise(async (resolve, reject) => {
       this.once('question', async (msg, msgSTR) => {
         if (msg.cmd === cmd) { resolve(msg); }
-        else { reject(new Error('Recived cmd is not same as sent cmd.')); }
+        else { reject(new Error('Received cmd is not same as sent cmd.')); }
       });
       await helper.sleep(this.wcOpts.questionTimeout);
       reject(new Error(`No answer for the question: ${cmd}`));
